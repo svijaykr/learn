@@ -21,7 +21,7 @@
 
 #include "http_parser.h"
 
-#define ECHO_PORT 9999
+#define ECHO_PORT 9998
 #define BUF_SIZE 4096
 
 #define MAX_HEADERS 10
@@ -56,6 +56,7 @@ int
 request_path_cb (http_parser *_, const char *p, size_t len)
 {
     strncat(message->request_path, p, len);
+    printf ("request_path_cb called : %s\n", message->request_path);
     return 0;
 }
 
@@ -63,6 +64,7 @@ int
 request_uri_cb (http_parser *_, const char *p, size_t len)
 {
     strncat(message->request_uri, p, len);
+    printf ("request_uri_cb called : %s\n", message->request_uri);
     return 0;
 }
 
@@ -70,12 +72,14 @@ int
 query_string_cb (http_parser *_, const char *p, size_t len)
 {
     strncat(message->query_string, p, len);
+    printf ("query_string_cb called : %s\n", message->query_string);
     return 0;
 }
 
 int
 fragment_cb (http_parser *_, const char *p, size_t len)
 {
+    printf ("fragment_cb called : %s\n", message->fragment);
     strncat(message->fragment, p, len);
     return 0;
 }
@@ -92,18 +96,22 @@ header_field_cb (http_parser *_, const char *p, size_t len)
 
     m->last_header_element = FIELD;
 
+    printf ("header_field_cb called : %s\n", m->headers[m->num_headers-1][0]);
+
     return 0;
 }
 
 int
 header_value_cb (http_parser *_, const char *p, size_t len)
 {
+
     message_t *m = message;
 
     strncat(m->headers[m->num_headers-1][1], p, len);
 
     m->last_header_element = VALUE;
 
+    printf ("header_value_cb called : %s\n", m->headers[m->num_headers-1][1]);
     return 0;
 }
 
@@ -111,6 +119,7 @@ int
 body_cb (http_parser *_, const char *p, size_t len)
 {
     strncat(message->body, p, len);
+    printf ("body_cb called : %s\n", message->body);
  // printf("body_cb: '%s'\n", requests[num_messages].body);
     return 0;
 }
@@ -118,6 +127,7 @@ body_cb (http_parser *_, const char *p, size_t len)
 int
 message_complete_cb (http_parser *parser)
 {
+    printf ("message_complete_cb called :%d,  %d\n", parser->method,parser->status_code);
     message->method = parser->method;
     message->status_code = parser->status_code;
 
@@ -127,6 +137,7 @@ message_complete_cb (http_parser *parser)
 int
 message_begin_cb (http_parser *_)
 {
+    printf ("message_begin_cb called\n");
     return 0;
 }
 
@@ -135,10 +146,10 @@ parser_init (http_parser *parser, int client_socket, enum http_parser_type type)
 {
 
 
-    http_parser_init(&parser, type);
-    message_t *message = (message_t *) malloc(sizeof(message_t));
+    http_parser_init(parser, type);
+    message = (message_t *) malloc(sizeof(message_t));
 
-    memset(message, 0, sizeof message);
+    memset(message, 0, sizeof(message_t));
 
     parser->on_message_begin     = message_begin_cb;
     parser->on_header_field      = header_field_cb;
@@ -173,6 +184,7 @@ server_init()
 int 
 main(int argc, char *argv[])
 {
+    printf ("%s, %d\n", argv[1], atoi(argv[1]));
 	int	sock,client_sock;
 	ssize_t	readret;
 	socklen_t cli_size;
@@ -193,7 +205,7 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(ECHO_PORT);
+	addr.sin_port = htons(atoi(argv[1]));
 	addr.sin_addr.s_addr = INADDR_ANY;
 
 	FD_ZERO(&master);
