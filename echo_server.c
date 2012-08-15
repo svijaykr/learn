@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "http_parser->h"
+#include "http_parser.h"
 
 #define ECHO_PORT 9999
 #define BUF_SIZE 4096
@@ -83,7 +83,7 @@ fragment_cb (http_parser *_, const char *p, size_t len)
 int
 header_field_cb (http_parser *_, const char *p, size_t len)
 {
-    struct message *m = message;
+    message_t *m = message;
 
     if (m->last_header_element != FIELD)
       m->num_headers++;
@@ -98,7 +98,7 @@ header_field_cb (http_parser *_, const char *p, size_t len)
 int
 header_value_cb (http_parser *_, const char *p, size_t len)
 {
-    struct message *m = message;
+    message_t *m = message;
 
     strncat(m->headers[m->num_headers-1][1], p, len);
 
@@ -136,7 +136,7 @@ parser_init (http_parser *parser, int client_socket, enum http_parser_type type)
 
 
     http_parser_init(&parser, type);
-    message_t *message = (message_t *) malloc(sizeof(struct message));
+    message_t *message = (message_t *) malloc(sizeof(message_t));
 
     memset(message, 0, sizeof message);
 
@@ -151,7 +151,7 @@ parser_init (http_parser *parser, int client_socket, enum http_parser_type type)
     parser->on_headers_complete  = NULL;
     parser->on_message_complete  = message_complete_cb;
 
-    parser->data = client_socket;
+    //parser->data = client_socket;
 }
 int 
 close_socket(int sock)
